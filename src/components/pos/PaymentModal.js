@@ -35,23 +35,26 @@ export default function PaymentModal({ total, onClose }) {
             // 1. Create Transaction Record
             const transaction = {
                 id: "trx_" + Date.now(),
-                shiftId: shift ? shift.id : 'ADMIN_NO_SHIFT',
-                cashierId: user.id,
+                shift_id: shift ? shift.id : null, // Schema: shift_id
+                cashier_id: user.id, // Schema: cashier_id
                 items: cart,
-                subtotal: total,
-                tax: 0,
-                grandTotal: total,
-                paymentMethod: method,
-                cashPaid: paid,
+                total: total, // Schema: total  (no subtotal/tax needed if flat)
+                grand_total: total, // Schema: grand_total
+                payment_method: method, // Schema: payment_method
+                pay_amount: paid, // Schema: pay_amount
                 change: change,
                 status: 'PAID',
-                createdAt: new Date().toISOString()
+                created_at: new Date().toISOString()
             };
 
-            db.add('transactions', transaction);
+            await db.add('transactions', transaction);
 
             // 2. Inventory Deduct Logic
-            inventoryService.deductStock(cart);
+            // NOTE: inventoryService needs update too if it uses db.get/update synchronously
+            // For now, let's assume we do this manually or refactor service.
+            // Let's call inventoryService.deductStock but IT NEEDS TO BE ASYNC.
+            // I will update inventoryService next.
+            await inventoryService.deductStock(cart);
 
             // 3. Auto-Print Receipt (restored)
             try {

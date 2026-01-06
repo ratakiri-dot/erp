@@ -15,8 +15,8 @@ export default function TransactionsView() {
     const [paymentMethod, setPaymentMethod] = useState("ALL");
 
     useEffect(() => {
-        const load = () => {
-            const raw = db.get('transactions');
+        const load = async () => {
+            const raw = await db.get('transactions');
             setTrxs(raw.reverse()); // Show newest first
             setFilteredTrxs(raw);
         };

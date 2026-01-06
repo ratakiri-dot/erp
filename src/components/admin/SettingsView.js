@@ -16,22 +16,63 @@ export default function SettingsView() {
     const [isSaved, setIsSaved] = useState(false);
 
     useEffect(() => {
-        const raw = db.get('settings');
-        const config = raw.storeName ? raw : (raw[0] || {
-            storeName: "POS SYSTEM DEMO",
-            storeAddress: "Jl. Teknologi No. 1",
-            footerMessage: "TERIMA KASIH",
-            showDashLines: true,
-            showFooter: true
-        });
-        setSettings(config);
+        const load = async () => {
+            const raw = await db.get('settings');
+            // Assuming single row
+            const config = raw[0] || {
+                store_name: "RATAKIRI POS",
+                store_address: "Jl. Teknologi No. 1",
+                footer_message: "TERIMA KASIH",
+                show_dash_lines: true,
+                show_footer: true,
+                printer_type: 'AUTO'
+            };
+
+            // Map schema keys to state keys if needed or just use schema keys
+            // My state uses camelCase, schema snake_case.
+            // Let's rely on schema keys for data consistency if possible, 
+            // OR map them.
+            // Let's map them to match state to avoid rewriting UI
+            setSettings({
+                id: config.id, // Store ID for update
+                storeName: config.store_name,
+                storeAddress: config.store_address,
+                footerMessage: config.footer_message,
+                showDashLines: config.show_dash_lines,
+                showFooter: config.show_footer,
+                printerPref: config.printer_type
+            });
+        };
+        load();
     }, []);
 
-    const handleSave = () => {
-        localStorage.setItem('pos_settings', JSON.stringify(settings));
-        setIsSaved(true);
-        setTimeout(() => setIsSaved(false), 2000);
-        alert("Settings Saved!");
+    const handleSave = async () => {
+        // localStorage.setItem('pos_settings', JSON.stringify(settings));
+
+        try {
+            const updates = {
+                store_name: settings.storeName,
+                store_address: settings.storeAddress,
+                footer_message: settings.footerMessage,
+                show_dash_lines: settings.showDashLines,
+                show_footer: settings.showFooter,
+                printer_type: settings.printerPref
+            };
+
+            if (settings.id) {
+                await db.update('settings', settings.id, updates);
+            } else {
+                // Should not happen if seeded, but just in case
+                await db.add('settings', updates);
+            }
+
+            setIsSaved(true);
+            setTimeout(() => setIsSaved(false), 2000);
+
+        } catch (e) {
+            alert("Failed to save");
+            console.error(e);
+        }
     };
 
     // Dummy data for preview

@@ -18,8 +18,8 @@ export default function ProductsView() {
     const [newCategory, setNewCategory] = useState("");
     const [showCategoryInput, setShowCategoryInput] = useState(false);
 
-    const loadProducts = () => {
-        setProducts(db.get('products'));
+    const loadProducts = async () => {
+        setProducts(await db.get('products'));
         // Load categories from localStorage or use defaults
         const savedCategories = localStorage.getItem('pos_categories');
         if (savedCategories) {
@@ -53,23 +53,26 @@ export default function ProductsView() {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (editingId) {
-            db.update('products', editingId, { name, price: Number(price), category, image });
-        } else {
-            db.add('products', {
-                id: 'p_' + Date.now(),
-                name,
-                price: Number(price),
-                category,
-                image
-            });
+        try {
+            if (editingId) {
+                await db.update('products', editingId, { name, price: Number(price), category, image });
+            } else {
+                await db.add('products', {
+                    id: 'p_' + Date.now(),
+                    name,
+                    price: Number(price),
+                    category,
+                    image
+                });
+            }
+            resetForm();
+            loadProducts();
+        } catch (error) {
+            alert('Error saving product');
         }
-
-        resetForm();
-        loadProducts();
     };
 
     const handleEdit = (item) => {
@@ -81,13 +84,14 @@ export default function ProductsView() {
         setShowForm(true);
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (confirm("Hapus produk ini? Resep terkait juga akan hilang.")) {
-            db.delete('products', id);
+            await db.delete('products', id);
             // Also delete associated recipes
-            const recipes = db.get('recipes');
-            const filtered = recipes.filter(r => r.productId !== id);
-            localStorage.setItem('pos_recipes', JSON.stringify(filtered));
+            const recipes = await db.get('recipes');
+            // Assuming we have a delete helper or iterate. 
+            // Better to use ON DELETE CASCADE in SQL, which we did!
+            // So just deleting product is enough.
             loadProducts();
         }
     };

@@ -13,37 +13,39 @@ export default function UsersView() {
     const [role, setRole] = useState("CASHIER");
     const [pin, setPin] = useState("");
 
-    const loadUsers = () => {
-        setUsers(db.get('users'));
+    const loadUsers = async () => {
+        setUsers(await db.get('users'));
     };
 
     useEffect(() => {
         loadUsers();
     }, []);
 
-    const handleAddUser = (e) => {
+    const handleAddUser = async (e) => {
         e.preventDefault();
         if (!name || !pin) return alert("Please fill details");
 
-        db.add('users', {
-            id: 'u_' + Date.now(),
-            name,
-            role,
-            pin
-        });
+        try {
+            await db.add('users', {
+                id: 'u_' + Date.now(),
+                name,
+                role,
+                pin
+            });
 
-        setShowAdd(false);
-        setName("");
-        setPin("");
-        loadUsers();
-        alert("User Created!");
+            setShowAdd(false);
+            setName("");
+            setPin("");
+            loadUsers();
+            alert("User Created!");
+        } catch (e) {
+            alert("Error creating user");
+        }
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (!confirm("Delete this user?")) return;
-        const current = db.get('users');
-        const filtered = current.filter(u => u.id !== id);
-        localStorage.setItem('pos_users', JSON.stringify(filtered));
+        await db.delete('users', id);
         loadUsers();
     };
 

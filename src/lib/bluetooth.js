@@ -46,20 +46,27 @@ export const printerService = {
     },
 
     print: async function (transaction) {
-        const settings = db.get('settings');
-        const config = settings.storeName ? settings : (settings[0] || {});
-        const pref = config.printerPref || 'AUTO';
+        const settingsRaw = await db.get('settings');
+        const config = settingsRaw[0] || {
+            store_name: "RATAKIRI POS",
+            store_address: "Jl. Teknologi No. 1",
+            footer_message: "TERIMA KASIH",
+            show_dash_lines: true,
+            show_footer: true,
+            printer_type: 'AUTO'
+        };
+        const pref = config.printer_type || 'AUTO';
 
         console.log("Printing with preference:", pref);
 
         if (pref === 'SYSTEM') {
-            this.printSystem(transaction);
+            this.printSystem(transaction, config);
             return;
         }
 
         if (pref === 'BLUETOOTH') {
             if (this.device && this.device.gatt.connected) {
-                const data = this.generateReceiptESC(transaction);
+                const data = this.generateReceiptESC(transaction, config);
                 await this.printBluetooth(data);
             } else {
                 alert("Printer Bluetooth tidak terhubung! Silakan connect dulu atau ubah ke System Print.");
@@ -70,11 +77,11 @@ export const printerService = {
         // AUTO MODE
         if (this.device && this.device.gatt.connected) {
             console.log("Auto: Bluetooth connected, using BT.");
-            const data = this.generateReceiptESC(transaction);
+            const data = this.generateReceiptESC(transaction, config);
             await this.printBluetooth(data);
         } else {
             console.log("Auto: Bluetooth not connected, falling back to System.");
-            this.printSystem(transaction);
+            this.printSystem(transaction, config);
         }
     },
 
@@ -91,23 +98,15 @@ export const printerService = {
         }
     },
 
-    generateReceiptESC: (transaction) => {
-        const settings = db.get('settings');
-        const config = settings.storeName ? settings : (settings[0] || {
-            storeName: "POS SYSTEM DEMO",
-            storeAddress: "Jl. Teknologi No. 1",
-            footerMessage: "TERIMA KASIH",
-            showDashLines: true,
-            showFooter: true
-        });
-
+    generateReceiptESC: (transaction, config) => {
+        // Config passed from print()
         const encoder = new TextEncoder();
         let commands = [];
         const addText = (text) => encoder.encode(text).forEach(b => commands.push(b));
         const addHex = (arr) => arr.forEach(b => commands.push(b));
 
         const addLine = () => {
-            if (config.showDashLines) {
+            if (config.show_dash_lines) {
                 addText("--------------------------------\n");
             } else {
                 addText("\n"); // Just a spacer if no line
@@ -116,11 +115,11 @@ export const printerService = {
 
         addHex([0x1B, 0x40]); // INIT
         addHex([0x1B, 0x61, 0x01]); // CENTER
-        addText(`${config.storeName}\n${config.storeAddress}\n`);
+        addText(`${config.store_name}\n${config.store_address}\n`);
         addLine();
 
         addHex([0x1B, 0x61, 0x00]); // LEFT
-        addText(`No: ${transaction.id.split('_')[1]}\nTgl: ${new Date(transaction.createdAt).toLocaleString()}\n`);
+        addText(`No: ${transaction.id.split('_')[1]}\nTgl: ${new Date(transaction.created_at).toLocaleString('id-ID')}\n`); // Schema: created_at
         addLine();
 
         transaction.items.forEach(item => {
@@ -130,16 +129,17 @@ export const printerService = {
 
         addLine();
         addHex([0x1B, 0x45, 0x01]); // BOLD ON
-        addText(`TOTAL: Rp ${transaction.grandTotal.toLocaleString()}\n`);
+        // Schema: grand_total, pay_amount, change
+        addText(`TOTAL: Rp ${transaction.grand_total?.toLocaleString() || 0}\n`);
         addHex([0x1B, 0x45, 0x00]); // BOLD OFF
 
-        if (transaction.cashPaid !== undefined) {
-            addText(`Bayar: Rp ${transaction.cashPaid.toLocaleString()}\n`);
+        if (transaction.pay_amount !== undefined) {
+            addText(`Bayar: Rp ${transaction.pay_amount.toLocaleString()}\n`);
             addText(`Kembali: Rp ${transaction.change.toLocaleString()}\n`);
         }
 
-        if (config.showFooter) {
-            addText(`\n${config.footerMessage}\n\n\n`);
+        if (config.show_footer) {
+            addText(`\n${config.footer_message}\n\n\n`);
         } else {
             addText("\n\n\n");
         }
@@ -148,15 +148,18 @@ export const printerService = {
     },
 
     // --- SYSTEM PRINTER HELPER ---
-    printSystem: (transaction) => {
-        const settings = db.get('settings');
-        const config = settings.storeName ? settings : (settings[0] || {
-            storeName: "POS SYSTEM DEMO",
-            storeAddress: "Jl. Teknologi No. 1",
-            footerMessage: "TERIMA KASIH",
-            showDashLines: true,
-            showFooter: true
-        });
+    printSystem: (transaction, config) => {
+        // Config passed from print() or fallback
+        if (!config) {
+            // Fallback if called directly? usually won't happen
+            config = {
+                store_name: "RATAKIRI POS",
+                store_address: "Jl. Teknologi No. 1",
+                footer_message: "TERIMA KASIH",
+                show_dash_lines: true,
+                show_footer: true
+            };
+        }
 
         // Create a hidden iframe or new window to print
         const printWindow = window.open('', '', 'width=300,height=600');
@@ -172,19 +175,19 @@ export const printerService = {
             body { font-family: 'Courier New', monospace; font-size: 12px; width: 100%; margin: 0; padding: 10px; }
             .center { text-align: center; }
             .bold { fontWeight: bold; }
-            .line { border-bottom: 1px dashed black; margin: 5px 0; display: ${config.showDashLines ? 'block' : 'none'}; }
+            .line { border-bottom: 1px dashed black; margin: 5px 0; display: ${config.show_dash_lines ? 'block' : 'none'}; }
             .item { display: flex; justify-content: space-between; }
             .right { text-align: right; }
         </style>
         </head>
         <body>
         <div class="center">
-            <strong>${config.storeName}</strong><br/>
-            ${config.storeAddress}
+            <strong>${config.store_name}</strong><br/>
+            ${config.store_address}
         </div>
         <div class="line"></div>
         <div>No: ${transaction.id.split('_')[1]}</div>
-        <div>${new Date(transaction.createdAt).toLocaleString()}</div>
+        <div>${new Date(transaction.created_at).toLocaleString('id-ID')}</div>
         <div class="line"></div>
         
         ${transaction.items.map(item => `
@@ -196,16 +199,16 @@ export const printerService = {
         
         <div class="line"></div>
         <div style="font-size: 14px; font-weight: bold; text-align: right;">
-            TOTAL: Rp ${transaction.grandTotal.toLocaleString()}
+            TOTAL: Rp ${transaction.grand_total?.toLocaleString() || 0}
         </div>
         
-        ${transaction.cashPaid !== undefined ? `
-            <div class="item"><span>Bayar</span><span>Rp ${transaction.cashPaid.toLocaleString()}</span></div>
+        ${transaction.pay_amount !== undefined ? `
+            <div class="item"><span>Bayar</span><span>Rp ${transaction.pay_amount.toLocaleString()}</span></div>
             <div class="item"><span>Kembali</span><span>Rp ${transaction.change.toLocaleString()}</span></div>
         ` : ''}
 
         <br/>
-        ${config.showFooter ? `<div class="center">${config.footerMessage}</div>` : ''}
+        ${config.show_footer ? `<div class="center">${config.footer_message}</div>` : ''}
         </body>
     </html>
     `;

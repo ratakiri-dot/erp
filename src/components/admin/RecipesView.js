@@ -15,58 +15,62 @@ export default function RecipesView() {
     const [selectedProduct, setSelectedProduct] = useState("");
     const [ingredients, setIngredients] = useState([{ inventoryId: "", qty: 0 }]);
 
-    const loadData = () => {
-        setRecipes(db.get('recipes'));
-        setProducts(db.get('products'));
-        setInventory(db.get('inventory'));
+    const loadData = async () => {
+        setRecipes(await db.get('recipes'));
+        setProducts(await db.get('products'));
+        setInventory(await db.get('inventory'));
     };
 
     useEffect(() => {
         loadData();
     }, []);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         const recipeData = {
-            productId: selectedProduct,
-            ingredients: ingredients.filter(ing => ing.inventoryId && ing.qty > 0)
+            product_id: selectedProduct, // Schema: product_id
+            ingredients: JSON.stringify(ingredients.filter(ing => ing.inventoryId && ing.qty > 0)) // Schema: ingredients (JSONB)
         };
 
-        if (editingRecipe) {
-            // Update: find and replace
-            const allRecipes = db.get('recipes');
-            const index = allRecipes.findIndex(r => r.productId === editingRecipe.productId);
-            if (index !== -1) {
-                allRecipes[index] = recipeData;
-                localStorage.setItem('pos_recipes', JSON.stringify(allRecipes));
-            }
-        } else {
-            // Check if recipe already exists for this product
-            const existing = db.get('recipes').find(r => r.productId === selectedProduct);
-            if (existing) {
-                alert("Resep untuk produk ini sudah ada! Silakan edit yang ada.");
-                return;
-            }
-            db.add('recipes', recipeData);
-        }
+        try {
+            if (editingRecipe) {
+                // Update
+                // We need ID of the recipe. editingRecipe should have it if fetched from DB.
+                await db.update('recipes', editingRecipe.id, recipeData);
+            } else {
+                // Check if recipe already exists for this product
+                // We can do this via query or client side check
+                const existing = recipes.find(r => r.product_id === selectedProduct);
+                if (existing) {
+                    alert("Resep untuk produk ini sudah ada! Silakan edit yang ada.");
+                    return;
+                }
 
-        resetForm();
-        loadData();
+                await db.add('recipes', {
+                    ...recipeData,
+                    id: 'rcp_' + Date.now()
+                });
+            }
+            resetForm();
+            loadData();
+        } catch (err) {
+            alert("Gagal menyimpan resep");
+        }
     };
 
     const handleEdit = (recipe) => {
         setEditingRecipe(recipe);
-        setSelectedProduct(recipe.productId);
-        setIngredients(recipe.ingredients.length > 0 ? recipe.ingredients : [{ inventoryId: "", qty: 0 }]);
+        setSelectedProduct(recipe.product_id); // Schema: product_id
+        // Parse ingredients if string
+        const ings = typeof recipe.ingredients === 'string' ? JSON.parse(recipe.ingredients) : recipe.ingredients;
+        setIngredients(ings.length > 0 ? ings : [{ inventoryId: "", qty: 0 }]);
         setShowForm(true);
     };
 
-    const handleDelete = (productId) => {
+    const handleDelete = async (recipeId) => {
         if (confirm("Hapus resep ini?")) {
-            const allRecipes = db.get('recipes');
-            const filtered = allRecipes.filter(r => r.productId !== productId);
-            localStorage.setItem('pos_recipes', JSON.stringify(filtered));
+            await db.delete('recipes', recipeId);
             loadData();
         }
     };

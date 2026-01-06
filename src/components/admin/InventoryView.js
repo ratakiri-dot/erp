@@ -21,8 +21,10 @@ export default function InventoryView() {
     const [restockQty, setRestockQty] = useState(0);
     const [restockCost, setRestockCost] = useState(0);
 
-    const loadInventory = () => {
-        setInventory(db.get('inventory'));
+    // Load Data
+    const loadInventory = async () => {
+        const data = await db.get('inventory');
+        setInventory(data);
     };
 
     useEffect(() => {
@@ -36,26 +38,13 @@ export default function InventoryView() {
         setShowRestock(true);
     };
 
-    const handleRestockSubmit = (e) => {
+    const handleRestockSubmit = async (e) => {
         e.preventDefault();
 
-        // 1. Update Inventory Stock
         const newStock = Number(restockItem.stock) + Number(restockQty);
 
-        // Option: Update Cost Per Unit (Weighted Average or Latest)? 
-        // For simplicity, let's just keep the old cost or update it?
-        // Let's assume user wants to update unit cost if they mistakenly input it?
-        // Actually, let's calculate new unit cost based on this purchase?
-        // Unit Cost = Total Cost / Qty.
-        // Let's just update the cost field to be the latest purchase price per unit, 
-        // OR warn them. For now, let's just ADD STOCK and RECORD EXPENSE.
-        // We will optionally update the "Item Cost" reference if user wants?
-        // Let's just keep the old cost for now to avoid confusion, 
-        // OR we can calculate a weighted average?
-        // Weighted Avg = ((oldStock * oldCost) + (newQty * newCost)) / (oldStock + newQty)
-        // Let's do Weighted Average for better accuracy!
         const totalValueOld = Number(restockItem.stock) * Number(restockItem.cost);
-        const totalValueNew = Number(restockCost); // Total purchase price
+        const totalValueNew = Number(restockCost);
         const totalQty = newStock;
 
         let newUnitCost = restockItem.cost;
@@ -63,50 +52,63 @@ export default function InventoryView() {
             newUnitCost = Math.round((totalValueOld + totalValueNew) / totalQty);
         }
 
-        db.update('inventory', restockItem.id, {
-            stock: newStock,
-            cost: newUnitCost
-        });
+        try {
+            // Update Inventory
+            await db.update('inventory', restockItem.id, {
+                stock: newStock,
+                cost: newUnitCost
+            });
 
-        // 2. Add Expense Record
-        const expense = {
-            id: 'exp_' + Date.now(),
-            type: 'RESTOCK',
-            itemId: restockItem.id,
-            itemName: restockItem.name,
-            qty: Number(restockQty),
-            totalCost: Number(restockCost),
-            date: new Date().toISOString(),
-            userId: 'ADMIN' // Simplified
-        };
-        db.add('expenses', expense);
+            // Add Expense (Use Schema snake_case)
+            const expense = {
+                id: 'exp_' + Date.now(),
+                type: 'RESTOCK',
+                item_id: restockItem.id,
+                item_name: restockItem.name,
+                qty: Number(restockQty),
+                total_cost: Number(restockCost),
+                date: new Date().toISOString(),
+                user_id: 'ADMIN',
+                description: `Restock ${restockItem.name}`
+            };
 
-        alert(`Restock Berhasil!\nStok bertambah: ${restockQty} ${restockItem.unit}\nPengeluaran dicatat: Rp ${Number(restockCost).toLocaleString()}`);
+            await db.add('expenses', expense);
 
-        setShowRestock(false);
-        loadInventory();
+            alert(`Restock Berhasil!`);
+            setShowRestock(false);
+            loadInventory();
+        } catch (err) {
+            console.error(err);
+            alert("Restock gagal: " + err.message);
+        }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (editingId) {
-            // Update existing
-            db.update('inventory', editingId, { name, unit, stock: Number(stock), cost: Number(cost), minStock: Number(minStock) });
-        } else {
-            // Create new
-            db.add('inventory', {
-                id: 'i_' + Date.now(),
-                name,
-                unit,
-                stock: Number(stock),
-                cost: Number(cost),
-                minStock: Number(minStock)
-            });
-        }
+        const newItem = {
+            name,
+            unit,
+            stock: Number(stock),
+            cost: Number(cost),
+            min_stock: Number(minStock) // Schema: min_stock
+        };
 
-        resetForm();
-        loadInventory();
+        try {
+            if (editingId) {
+                await db.update('inventory', editingId, newItem);
+            } else {
+                await db.add('inventory', {
+                    id: 'i_' + Date.now(),
+                    ...newItem
+                });
+            }
+            resetForm();
+            loadInventory();
+        } catch (err) {
+            console.error(err);
+            alert("Gagal menyimpan bahan");
+        }
     };
 
     const handleEdit = (item) => {
@@ -115,16 +117,11 @@ export default function InventoryView() {
         setUnit(item.unit);
         setStock(item.stock);
         setCost(item.cost);
-        setMinStock(item.minStock);
+        setMinStock(item.min_stock || item.minStock || 0); // Handle potential casing diff
         setShowForm(true);
     };
 
-    const handleDelete = (id) => {
-        if (confirm("Hapus bahan ini?")) {
-            db.delete('inventory', id);
-            loadInventory();
-        }
-    };
+
 
     const resetForm = () => {
         setShowForm(false);

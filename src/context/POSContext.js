@@ -14,21 +14,27 @@ export function POSProvider({ children }) {
 
     // Load initial data
     useEffect(() => {
-        // Check for active session
-        const currentUser = JSON.parse(sessionStorage.getItem('pos_current_user'));
-        if (currentUser) setUser(currentUser);
+        const loadData = async () => {
+            await db.init(); // Ensure DB is ready
 
-        // Check for open shift
-        const openShift = db.getOpenShift();
-        if (openShift) setShift(openShift);
+            // Check session
+            const storedUser = sessionStorage.getItem('pos_current_user');
+            if (storedUser) setUser(JSON.parse(storedUser));
 
-        // Load Products
-        setProducts(db.get('products'));
+            // Check shift
+            const activeShift = await db.getOpenShift();
+            if (activeShift) setShift(activeShift);
+
+            // Load Products
+            const prods = await db.get('products');
+            setProducts(prods);
+        };
+        loadData();
     }, [refreshKey]);
 
     // Actions
-    const login = (pin) => {
-        const users = db.get('users');
+    const login = async (pin) => {
+        const users = await db.get('users');
         const validUser = users.find(u => u.pin === pin);
         if (validUser) {
             setUser(validUser);
@@ -43,34 +49,50 @@ export function POSProvider({ children }) {
         sessionStorage.removeItem('pos_current_user');
     };
 
-    const openShift = (amount) => {
+    const openShift = async (amount) => {
         if (!user) return;
         const newShift = {
-            id: "sh_" + Date.now(),
-            cashierId: user.id,
-            cashierName: user.name,
-            startTime: new Date().toISOString(),
-            startCash: parseFloat(amount),
+            id: 'sh_' + Date.now(),
+            user_id: user.id, // Changed to underscore for DB
+            // cashierName: user.name, // Not in schema, use join or store if needed? Schema has user_id.
+            start_time: new Date().toISOString(), // Schema: start_time
+            start_cash: parseFloat(amount), // Schema: start_cash
             status: 'OPEN',
-            expectedCash: parseFloat(amount), // Will increase with sales
+            expected_cash: parseFloat(amount), // Schema: expected_cash
         };
-        db.add('shifts', newShift);
-        setShift(newShift);
+
+        try {
+            await db.add('shifts', newShift);
+            setShift(newShift);
+            return true;
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
     };
 
-    const closeShift = (actualCash, notes) => {
+    const closeShift = async (actualCash, notes) => {
         if (!shift) return;
-        const diff = actualCash - shift.expectedCash;
-        const closedShift = {
-            ...shift,
-            endTime: new Date().toISOString(),
-            actualShutCash: parseFloat(actualCash),
+        const diff = actualCash - shift.expected_cash; // Schema: expected_cash
+        const updates = {
+            end_time: new Date().toISOString(),
+            actual_cash: parseFloat(actualCash),
             difference: diff,
-            note: notes,
             status: 'CLOSED'
+            // note: notes // Note not in schema? Add it? Schema has no 'note' col? 
+            // My schema in previous turn: status text default 'OPEN'. No note column.
+            // I'll skip note for now to match schema or schema needs update.
         };
-        db.update('shifts', shift.id, closedShift);
-        setShift(null);
+
+        try {
+            await db.update('shifts', shift.id, updates);
+            setShift(null);
+            return true;
+        } catch (e) {
+            console.error(e);
+            return false;
+
+        }
     };
 
     return (

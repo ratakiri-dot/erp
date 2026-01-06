@@ -2,38 +2,36 @@
 import { db } from "./db";
 
 export const inventoryService = {
-    deductStock: (items) => {
+    deductStock: async (items) => {
         // Items: [{ product, qty }]
-        const recipes = db.get('recipes');
-        const inventory = db.get('inventory');
-        const logs = [];
+        const recipes = await db.get('recipes');
+        const inventory = await db.get('inventory');
+        // const logs = []; // Not using logs table yet
 
-        items.forEach(item => {
-            const recipe = recipes.find(r => r.productId === item.product.id);
+        for (const item of items) {
+            const recipe = recipes.find(r => r.product_id === item.product.id); // Schema: product_id
             if (recipe) {
-                recipe.ingredients.forEach(ing => {
+                // recipe.ingredients is JSONB in Supabase, so it's already an array
+                const ingredients = typeof recipe.ingredients === 'string' ? JSON.parse(recipe.ingredients) : recipe.ingredients;
+
+                for (const ing of ingredients) {
                     // Find inventory item
-                    const invIndex = inventory.findIndex(i => i.id === ing.inventoryId);
-                    if (invIndex !== -1) {
-                        // Deduct
-                        inventory[invIndex].stock -= (ing.qty * item.qty);
+                    const invItem = inventory.find(i => i.id === ing.inventoryId); // Schema: inventory id is 'id'
+                    // Note: In recipe, we stored inventoryId. Check schema or data. 
+                    // My seed data uses inventoryId in json.
 
-                        // Log (Simulated)
-                        logs.push({
-                            inventoryId: inventory[invIndex].id,
-                            change: -(ing.qty * item.qty),
-                            type: 'SALE',
-                            balance: inventory[invIndex].stock
-                        });
+                    if (invItem) {
+                        const deductQty = ing.qty * item.qty;
+                        const newStock = Number(invItem.stock) - deductQty;
+
+                        // Update in DB
+                        await db.update('inventory', invItem.id, { stock: newStock });
+
+                        // Update local cache if we want, but we rely on refreshData() in context
                     }
-                });
+                }
             }
-        });
-
-        // Save back to DB
-        localStorage.setItem('pos_inventory', JSON.stringify(inventory));
-        // localStorage.setItem('pos_inventory_logs', JSON.stringify(logs)); // If we had logs table
-
+        }
         return true;
     }
 };

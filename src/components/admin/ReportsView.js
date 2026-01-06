@@ -61,77 +61,100 @@ export default function ReportsView() {
     useEffect(() => {
         if (!dateRange.start || !dateRange.end) return;
 
-        const transactions = db.get('transactions');
-        const recipes = db.get('recipes');
-        const inventory = db.get('inventory');
+        const loadReportData = async () => {
+            const transactions = await db.get('transactions');
+            const recipes = await db.get('recipes');
+            const inventory = await db.get('inventory');
+            const expenses = await db.get('expenses');
 
-        const start = new Date(dateRange.start);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(dateRange.end);
-        end.setHours(23, 59, 59, 999);
+            const start = new Date(dateRange.start);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(dateRange.end);
+            end.setHours(23, 59, 59, 999);
 
-        // Filter Transactions
-        const filteredTrx = transactions.filter(t => {
-            const tDate = new Date(t.createdAt);
-            return tDate >= start && tDate <= end;
-        });
-
-        let totalSales = 0;
-        let totalCOGS = 0;
-        const productMap = {}; // id -> {name, qty, sales}
-        const dailyMap = {}; // date -> {sales, cogs}
-
-        filteredTrx.forEach(trx => {
-            totalSales += trx.subtotal;
-            const dateKey = new Date(trx.createdAt).toLocaleDateString();
-
-            if (!dailyMap[dateKey]) dailyMap[dateKey] = { sales: 0, cogs: 0, profit: 0 };
-            dailyMap[dateKey].sales += trx.subtotal;
-
-            trx.items.forEach(cartItem => {
-                // Top Products Stats
-                if (!productMap[cartItem.product.id]) {
-                    productMap[cartItem.product.id] = { name: cartItem.product.name, qty: 0, sales: 0 };
-                }
-                productMap[cartItem.product.id].qty += cartItem.qty;
-                productMap[cartItem.product.id].sales += (cartItem.product.price * cartItem.qty);
-
-                // COGS Calc
-                const recipe = recipes.find(r => r.productId === cartItem.product.id);
-                let itemCost = 0;
-                if (recipe) {
-                    recipe.ingredients.forEach(ing => {
-                        const invItem = inventory.find(i => i.id === ing.inventoryId);
-                        if (invItem) itemCost += (invItem.cost * ing.qty);
-                    });
-                }
-                const totalItemCost = itemCost * cartItem.qty;
-                totalCOGS += totalItemCost;
-                dailyMap[dateKey].cogs += totalItemCost;
+            // Filter Transactions
+            const filteredTrx = transactions.filter(t => {
+                const tDate = new Date(t.created_at); // Schema: created_at
+                return tDate >= start && tDate <= end;
             });
-        });
 
-        // Finalize Daily Data
-        const dailyArr = Object.keys(dailyMap).map(k => ({
-            date: k,
-            sales: dailyMap[k].sales,
-            cogs: dailyMap[k].cogs,
-            profit: dailyMap[k].sales - dailyMap[k].cogs
-        })).sort((a, b) => new Date(a.date) - new Date(b.date));
+            // Filter Expenses (for Net Profit)
+            const filteredExp = expenses.filter(e => {
+                const eDate = new Date(e.date);
+                return eDate >= start && eDate <= end;
+            });
+            let totalOpExpenses = 0;
+            filteredExp.forEach(e => totalOpExpenses += Number(e.total_cost || 0)); // Schema: total_cost
 
-        // Finalize Top Products
-        const topArr = Object.values(productMap).sort((a, b) => b.qty - a.qty).slice(0, 5);
+            let totalSales = 0;
+            let totalCOGS = 0;
+            const productMap = {}; // id -> {name, qty, sales}
+            const dailyMap = {}; // date -> {sales, cogs}
 
-        setStats({
-            sales: totalSales,
-            transactions: filteredTrx.length,
-            cogs: totalCOGS,
-            profit: totalSales - totalCOGS
-        });
-        setDailyData(dailyArr);
-        setTopProducts(topArr);
+            filteredTrx.forEach(trx => {
+                // Schema uses grand_total. Items is JSONB.
+                const saleAmount = Number(trx.grand_total || 0);
+                totalSales += saleAmount;
+                const dateKey = new Date(trx.created_at).toLocaleDateString();
 
+                if (!dailyMap[dateKey]) dailyMap[dateKey] = { sales: 0, cogs: 0, profit: 0 };
+                dailyMap[dateKey].sales += saleAmount;
+
+                // trx.items is JSONB, might need parsing if string, but Supabase client usually auto-parses JSON columns
+                const items = typeof trx.items === 'string' ? JSON.parse(trx.items) : trx.items;
+
+                items.forEach(cartItem => {
+                    // Top Products Stats
+                    // cartItem.product.id
+                    if (!productMap[cartItem.product.id]) {
+                        productMap[cartItem.product.id] = { name: cartItem.product.name, qty: 0, sales: 0 };
+                    }
+                    productMap[cartItem.product.id].qty += cartItem.qty;
+                    productMap[cartItem.product.id].sales += (cartItem.product.price * cartItem.qty);
+
+                    // COGS Calc
+                    // Find recipe by product_id
+                    const recipe = recipes.find(r => r.product_id === cartItem.product.id);
+                    let itemCost = 0;
+                    if (recipe) {
+                        const ingredients = typeof recipe.ingredients === 'string' ? JSON.parse(recipe.ingredients) : recipe.ingredients;
+                        ingredients.forEach(ing => {
+                            const invItem = inventory.find(i => i.id === ing.inventoryId);
+                            if (invItem) itemCost += (Number(invItem.cost) * ing.qty);
+                        });
+                    }
+                    const totalItemCost = itemCost * cartItem.qty;
+                    totalCOGS += totalItemCost;
+                    dailyMap[dateKey].cogs += totalItemCost;
+                });
+            });
+
+            // Finalize Daily Data
+            const dailyArr = Object.keys(dailyMap).map(k => ({
+                date: k,
+                sales: dailyMap[k].sales,
+                cogs: dailyMap[k].cogs,
+                profit: dailyMap[k].sales - dailyMap[k].cogs // Profit here is Gross Profit
+            })).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            // Finalize Top Products
+            const topArr = Object.values(productMap).sort((a, b) => b.qty - a.qty).slice(0, 5);
+
+            setStats({
+                sales: totalSales,
+                transactions: filteredTrx.length,
+                cogs: totalCOGS,
+                expenses: totalOpExpenses,
+                profit: totalSales - totalCOGS - totalOpExpenses // Net Profit
+            });
+            setDailyData(dailyArr);
+            setTopProducts(topArr);
+        };
+
+        loadReportData();
     }, [dateRange]);
+
+
 
     const handleExportPDF = () => {
         const doc = new jsPDF();

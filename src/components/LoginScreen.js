@@ -20,8 +20,9 @@ export default function LoginScreen() {
         setPin((prev) => prev.slice(0, -1));
     };
 
-    const handleSubmit = () => {
-        if (login(pin)) {
+    const handleSubmit = async () => {
+        const success = await login(pin);
+        if (success) {
             // Success
         } else {
             setError("PIN Salah! Coba: 1234 (Admin), 0000 (Cashier), 5678 (Inventory), 9999 (Finance)");
