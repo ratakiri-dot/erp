@@ -1,0 +1,201 @@
+.navBar {
+    display: flex;
+    background: #1f1f22;
+    padding: 0.5rem;
+    border-radius: 8px;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #333;
+}
+
+.navItem {
+    flex: 1;
+    padding: 0.8rem;
+    background: transparent;
+    color: #888;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.navItem:hover {
+    background: #2c2c2e;
+    color: white;
+}
+
+.navItem.active {
+    background: #2c2c2e;
+    color: white;
+    border: 1px solid #444;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    color: white;
+}
+
+.table th {
+    text-align: left;
+    padding: 1rem;
+    border-bottom: 2px solid #333;
+    color: #888;
+}
+
+.table td {
+    padding: 1rem;
+    border-bottom: 1px solid #333;
+}
+
+.badge {
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.badgeOpen {
+    background: #00e0b8;
+    color: black;
+}
+
+.badgeClosed {
+    background: #666;
+    color: white;
+}
+
+/* RESPONSIVE DESIGN */
+/* RESPONSIVE DESIGN */
+@media (max-width: 1024px) {
+    .mainContainer {
+        flex-direction: column;
+    }
+
+    /* HAMBURGER & SIDEBAR LOGIC */
+    .hamburger {
+        display: block !important;
+    }
+
+    .desktopNav {
+        display: none !important;
+    }
+
+    .desktopOnly {
+        display: none !important;
+    }
+
+    /* Sidebar Drawer */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: -280px;
+        /* Hidden by default */
+        width: 250px;
+        background: #1f1f22;
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.5);
+        z-index: 1100;
+        transition: left 0.3s ease;
+        padding-top: 2rem;
+        /* Space for content */
+    }
+
+    .sidebar.open {
+        left: 0;
+    }
+
+    .sidebarOverlay {
+        display: block;
+    }
+
+    /* Vertical Navigation in Drawer */
+    .navLinks {
+        display: flex;
+        flex-direction: column;
+        padding: 1rem;
+        gap: 0.5rem;
+    }
+
+    .navItem {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 1rem;
+        font-size: 1rem;
+        border-radius: 8px;
+    }
+
+    /* EXISTING MOBILE HELPERS */
+    /* Hide Sidebar by default on mobile */
+    .mobileHidden {
+        display: none !important;
+    }
+
+    .mobileVisible {
+        display: block !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: 60px;
+        /* Below Header */
+        z-index: 999;
+        background: #1a1a1a;
+        overflow-y: auto;
+    }
+
+    /* Adjust Grid for Mobile */
+    .grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Table horizontal scroll */
+    .tableWrapper {
+        overflow-x: auto;
+    }
+
+    .mobileCartToggle {
+        display: flex !important;
+    }
+
+    .mobileOnly {
+        display: flex !important;
+    }
+}
+
+/* Desktop Defaults */
+.hamburger {
+    display: none;
+}
+
+.sidebarOverlay {
+    display: none;
+}
+
+.mobileCartToggle {
+    display: none;
+}
+
+.mobileOnly {
+    display: none;
+}
+
+/* DESKTOP SIDEBAR AS NAV STRIP */
+@media (min-width: 1025px) {
+    .mobileHidden {
+        display: flex !important;
+        /* Force flex for sidebar layout */
+    }
+
+    /* On Desktop, sidebar is hidden/not used in this layout mode? 
+       Actually, `navBar` is the desktop nav. `sidebar` is only for mobile usage in current logic?
+       Wait, in page.js I replaced `navBar` with duplicate logic?
+       Correct approach: `navBar` is desktop. `sidebar` is mobile.
+       So on desktop, .sidebar should be hidden.
+    */
+    .sidebar {
+        display: none;
+    }
+}

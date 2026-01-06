@@ -1,0 +1,89 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal {
+    background: #1f1f22;
+    padding: 2rem;
+    border-radius: 16px;
+    width: 600px;
+    border: 1px solid #333;
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.amount {
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+    color: #00e0b8;
+    margin-bottom: 2rem;
+}
+
+.methods {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.methodBtn {
+    padding: 2rem;
+    background: #2c2c2e;
+    border: 1px solid #444;
+    border-radius: 12px;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.methodBtn:hover {
+    background: #3a3a3c;
+    border-color: #0070f3;
+}
+
+.methodBtn.active {
+    background: #0070f3;
+    border-color: #0070f3;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.cancelBtn {
+    flex: 1;
+    padding: 1rem;
+    background: transparent;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.confirmBtn {
+    flex: 2;
+    padding: 1rem;
+    background: #00e0b8;
+    color: black;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
