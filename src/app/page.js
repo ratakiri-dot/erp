@@ -173,7 +173,7 @@ export default function Home() {
           <div style={{ minWidth: 'fit-content' }}>
             <h1 style={{ fontSize: "1.5rem", color: '#00e0b8', fontWeight: 'bold' }}>RATAKIRI POS</h1>
             <p style={{ color: "#888", fontSize: "0.9rem" }}>
-              Shift: {shift ? new Date(parseInt(shift.id.split('_')[1])).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+              Shift: {shift?.id?.includes('_') ? new Date(parseInt(shift.id.split('_')[1])).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
             </p>
           </div>
 

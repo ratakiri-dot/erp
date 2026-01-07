@@ -44,8 +44,8 @@ export default function ReceiptPreview({ data, settings }) {
 
             {/* Meta */}
             <div>
-                <div>No: {data.id ? data.id.split('_')[1] : '0000'}</div>
-                <div>Tgl: {data.created_at ? new Date(data.created_at).toLocaleString() : new Date().toLocaleString()}</div>
+                <div>No: {idNum}</div>
+                <div>Tgl: {dateStr}</div>
             </div>
 
             <div style={styles.line}></div>

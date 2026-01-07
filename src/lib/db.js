@@ -62,36 +62,36 @@ export const db = {
             console.log('Checking Database status...');
 
             // 1. Check Users
-            const { count: userCount, error: userErr } = await supabase.from('users').select('*', { count: 'exact', head: true });
-            if (!userErr && userCount === 0) {
+            const { data: users, error: userErr } = await supabase.from('users').select('id').limit(1);
+            if (!userErr && (!users || users.length === 0)) {
                 console.log('Seeding Users...');
                 await supabase.from('users').insert(SEED_DATA.users);
             }
 
             // 2. Check Inventory
-            const { count: invCount, error: invErr } = await supabase.from('inventory').select('*', { count: 'exact', head: true });
-            if (!invErr && invCount === 0) {
+            const { data: inventory, error: invErr } = await supabase.from('inventory').select('id').limit(1);
+            if (!invErr && (!inventory || inventory.length === 0)) {
                 console.log('Seeding Inventory...');
                 await supabase.from('inventory').insert(SEED_DATA.inventory);
             }
 
             // 3. Check Products
-            const { count: prodCount, error: prodErr } = await supabase.from('products').select('*', { count: 'exact', head: true });
-            if (!prodErr && prodCount === 0) {
+            const { data: products, error: prodErr } = await supabase.from('products').select('id').limit(1);
+            if (!prodErr && (!products || products.length === 0)) {
                 console.log('Seeding Products...');
                 await supabase.from('products').insert(SEED_DATA.products);
             }
 
             // 4. Check Recipes
-            const { count: rcpCount, error: rcpErr } = await supabase.from('recipes').select('*', { count: 'exact', head: true });
-            if (!rcpErr && rcpCount === 0) {
+            const { data: recipes, error: rcpErr } = await supabase.from('recipes').select('id').limit(1);
+            if (!rcpErr && (!recipes || recipes.length === 0)) {
                 console.log('Seeding Recipes...');
                 await supabase.from('recipes').insert(SEED_DATA.recipes);
             }
 
             // 5. Check Settings
-            const { count: setCount, error: setErr } = await supabase.from('settings').select('*', { count: 'exact', head: true });
-            if (!setErr && setCount === 0) {
+            const { data: settings, error: setErr } = await supabase.from('settings').select('id').limit(1);
+            if (!setErr && (!settings || settings.length === 0)) {
                 console.log('Seeding Settings...');
                 await supabase.from('settings').insert({
                     store_name: "RATAKIRI POS",
