@@ -197,7 +197,7 @@ export default function RecipesView() {
                     {(recipes || []).map((recipe, idx) => {
                         const ings = (typeof recipe.ingredients === 'string' ? JSON.parse(recipe.ingredients) : recipe.ingredients) || [];
                         return (
-                            <tr key={recipe.id || idx}>
+                            <tr key={recipe.product_id || idx}>
                                 <td style={{ fontWeight: 'bold' }}>{getProductName(recipe.product_id)}</td>
                                 <td>
                                     {ings.map((ing, i) => (
