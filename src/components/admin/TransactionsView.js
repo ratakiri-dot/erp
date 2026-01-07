@@ -34,13 +34,13 @@ export default function TransactionsView() {
         if (dateStart) {
             const start = new Date(dateStart);
             start.setHours(0, 0, 0, 0);
-            result = result.filter(t => new Date(t.createdAt) >= start);
+            result = result.filter(t => new Date(t.created_at) >= start);
         }
 
         if (dateEnd) {
             const end = new Date(dateEnd);
             end.setHours(23, 59, 59, 999);
-            result = result.filter(t => new Date(t.createdAt) <= end);
+            result = result.filter(t => new Date(t.created_at) <= end);
         }
 
         if (paymentMethod !== "ALL") {
