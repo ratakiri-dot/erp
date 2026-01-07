@@ -32,6 +32,9 @@ export default function ReceiptPreview({ data, settings }) {
         bold: { fontWeight: 'bold' }
     };
 
+    const idNum = data.id?.includes('_') ? (data.id.split('_')[1] || data.id) : (data.id || 'N/A');
+    const dateStr = data.created_at ? new Date(data.created_at).toLocaleString('id-ID') : '-';
+
     return (
         <div style={styles.container}>
             {/* Header */}
