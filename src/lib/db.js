@@ -15,10 +15,10 @@ const DB_KEYS = {
 // Initial Seed Data (Keep for fallback seeding)
 const SEED_DATA = {
     users: [
-        { id: 'u1', name: 'Owner', role: 'ADMIN', pin: '1234' },
-        { id: 'u2', name: 'Budi (Kasir)', role: 'CASHIER', pin: '0000' },
-        { id: 'u3', name: 'Siti (Gudang)', role: 'INVENTORY', pin: '5678' },
-        { id: 'u4', name: 'Finance Staff', role: 'FINANCE', pin: '9999' },
+        { id: 'u1', name: 'Owner', role: 'ADMIN', pin: '1234' }, // Can do everything
+        { id: 'u2', name: 'Budi (Kasir)', role: 'CASHIER', pin: '0000' }, // POS Only
+        { id: 'u3', name: 'Siti (Gudang)', role: 'INVENTORY', pin: '1111' }, // Inventory Only
+        { id: 'u4', name: 'Budi Keuangan', role: 'FINANCE', pin: '9999' } // Finance Only
     ],
     inventory: [
         { id: 'i1', name: 'Kopi Arabica (Gram)', unit: 'gr', stock: 1000, cost: 300, min_stock: 200 }, // Schema snake_case for min_stock
