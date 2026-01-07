@@ -16,9 +16,7 @@ export default function RecipesView() {
     const [ingredients, setIngredients] = useState([{ inventoryId: "", qty: 0 }]);
 
     const loadData = async () => {
-        const recipesData = await db.get('recipes');
-        console.log('📋 Loaded Recipes:', recipesData);
-        setRecipes(recipesData);
+        setRecipes(await db.get('recipes'));
         setProducts(await db.get('products'));
         setInventory(await db.get('inventory'));
     };
@@ -198,7 +196,6 @@ export default function RecipesView() {
                 <tbody>
                     {(recipes || []).map((recipe, idx) => {
                         const ings = (typeof recipe.ingredients === 'string' ? JSON.parse(recipe.ingredients) : recipe.ingredients) || [];
-                        console.log(`Recipe ${recipe.product_id}:`, { raw: recipe.ingredients, parsed: ings });
                         return (
                             <tr key={recipe.product_id || idx}>
                                 <td style={{ fontWeight: 'bold' }}>{getProductName(recipe.product_id)}</td>
