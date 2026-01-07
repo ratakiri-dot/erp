@@ -269,7 +269,7 @@ export default function InventoryView() {
                                     </span>
                                 </td>
                                 <td style={{ whiteSpace: 'nowrap' }}>
-                                    <button onClick={() => openRestock(item)} style={{ marginRight: '0.5rem', color: '#52c41a', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                                    <button onClick={() => openRestock(item)} style={{ marginRight: '0.5rem', background: '#00e0b8', color: '#000', border: 'none', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', fontWeight: 'bold' }}>
                                         + Restock
                                     </button>
                                     <button onClick={() => handleEdit(item)} style={{ marginRight: '0.5rem', color: '#1890ff', background: 'none', border: 'none', cursor: 'pointer' }}>
