@@ -63,7 +63,7 @@ export default function RecipesView() {
         setEditingRecipe(recipe);
         setSelectedProduct(recipe.product_id); // Schema: product_id
         // Parse ingredients if string
-        const ings = typeof recipe.ingredients === 'string' ? JSON.parse(recipe.ingredients) : recipe.ingredients;
+        const ings = (typeof recipe.ingredients === 'string' ? JSON.parse(recipe.ingredients) : recipe.ingredients) || [];
         setIngredients(ings.length > 0 ? ings : [{ inventoryId: "", qty: 0 }]);
         setShowForm(true);
     };
@@ -197,15 +197,15 @@ export default function RecipesView() {
                     </tr>
                 </thead>
                 <tbody>
-                    {recipes.map((recipe, idx) => {
-                        const ings = typeof recipe.ingredients === 'string' ? JSON.parse(recipe.ingredients) : (recipe.ingredients || []);
+                    {(recipes || []).map((recipe, idx) => {
+                        const ings = (typeof recipe.ingredients === 'string' ? JSON.parse(recipe.ingredients) : recipe.ingredients) || [];
                         return (
-                            <tr key={idx}>
+                            <tr key={recipe.id || idx}>
                                 <td style={{ fontWeight: 'bold' }}>{getProductName(recipe.product_id)}</td>
                                 <td>
                                     {ings.map((ing, i) => (
                                         <div key={i} style={{ fontSize: '0.9rem', color: '#ccc' }}>
-                                            • {ing.qty} × {getInventoryName(ing.inventoryId)}
+                                            • {ing?.qty || 0} × {getInventoryName(ing?.inventoryId)}
                                         </div>
                                     ))}
                                 </td>

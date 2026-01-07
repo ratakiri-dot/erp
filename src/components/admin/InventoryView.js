@@ -248,7 +248,7 @@ export default function InventoryView() {
                         </tr>
                     </thead>
                     <tbody>
-                        {inventory.map(item => (
+                        {(inventory || []).map(item => (
                             <tr key={item.id}>
                                 <td>{item.name}</td>
                                 <td style={{ fontWeight: 'bold' }}>{item.stock}</td>
