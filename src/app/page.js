@@ -178,9 +178,31 @@ export default function Home() {
           </div>
 
           {/* DESKTOP NAVIGATION (Hidden on Mobile) */}
-          <div className={`${styles.navBar} ${styles.desktopNav}`} style={{ marginBottom: 0, flex: 1, overflowX: 'auto', border: 'none', background: 'transparent' }}>
-            {/* Same buttons as mobile but rendered inline for desktop */}
-            {/* ... Only show if NOT mobile? Actually, let's just use CSS to hide .desktopNav on mobile and show .mobileSidebar on mobile */}
+          <div className={`${styles.navBar} ${styles.desktopNav}`} style={{ marginBottom: 0, flex: 1, overflowX: 'auto', border: 'none', background: 'transparent', display: 'flex', gap: '0.5rem' }}>
+            {hasAccess(user.role, 'POS') && (
+              <button className={`${styles.navItem} ${activeTab === 'POS' ? styles.active : ''}`} onClick={() => handleTabChange('POS')}>🛒 Cashier</button>
+            )}
+            {hasAccess(user.role, 'PRODUCTS') && (
+              <button className={`${styles.navItem} ${activeTab === 'PRODUCTS' ? styles.active : ''}`} onClick={() => handleTabChange('PRODUCTS')}>🍕 Products</button>
+            )}
+            {hasAccess(user.role, 'INVENTORY') && (
+              <button className={`${styles.navItem} ${activeTab === 'INVENTORY' ? styles.active : ''}`} onClick={() => handleTabChange('INVENTORY')}>📦 Inventory</button>
+            )}
+            {hasAccess(user.role, 'RECIPES') && (
+              <button className={`${styles.navItem} ${activeTab === 'RECIPES' ? styles.active : ''}`} onClick={() => handleTabChange('RECIPES')}>📜 Recipes</button>
+            )}
+            {hasAccess(user.role, 'TRANSACTIONS') && (
+              <button className={`${styles.navItem} ${activeTab === 'TRANSACTIONS' ? styles.active : ''}`} onClick={() => handleTabChange('TRANSACTIONS')}>📄 History</button>
+            )}
+            {hasAccess(user.role, 'REPORTS') && (
+              <button className={`${styles.navItem} ${activeTab === 'REPORTS' ? styles.active : ''}`} onClick={() => handleTabChange('REPORTS')}>📊 Reports</button>
+            )}
+            {hasAccess(user.role, 'USERS') && (
+              <button className={`${styles.navItem} ${activeTab === 'USERS' ? styles.active : ''}`} onClick={() => handleTabChange('USERS')}>👥 Users</button>
+            )}
+            {hasAccess(user.role, 'SETTINGS') && (
+              <button className={`${styles.navItem} ${activeTab === 'SETTINGS' ? styles.active : ''}`} onClick={() => handleTabChange('SETTINGS')}>⚙️ Settings</button>
+            )}
           </div>
         </div>
 
