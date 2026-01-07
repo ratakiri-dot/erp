@@ -15,7 +15,7 @@ const DB_KEYS = {
 // Initial Seed Data (Keep for fallback seeding)
 const SEED_DATA = {
     users: [
-        { id: 'u1', name: 'Owner', role: 'ADMIN', pin: '1234' }, // Can do everything
+        { id: 'u1', name: 'Owner', role: 'ADMIN', pin: '1919' }, // Can do everything
         { id: 'u2', name: 'Budi (Kasir)', role: 'CASHIER', pin: '0000' }, // POS Only
         { id: 'u3', name: 'Siti (Gudang)', role: 'INVENTORY', pin: '1111' }, // Inventory Only
         { id: 'u4', name: 'Budi Keuangan', role: 'FINANCE', pin: '9999' } // Finance Only

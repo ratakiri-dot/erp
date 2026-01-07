@@ -25,7 +25,7 @@ export default function LoginScreen() {
         if (success) {
             // Success
         } else {
-            setError("PIN Salah! Coba: 1234 (Admin), 0000 (Cashier), 5678 (Inventory), 9999 (Finance)");
+            setError("PIN Salah!");
             setPin("");
         }
     };

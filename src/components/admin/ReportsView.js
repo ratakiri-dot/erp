@@ -7,7 +7,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 export default function ReportsView() {
-    const [stats, setStats] = useState({ sales: 0, transactions: 0, cogs: 0, profit: 0 });
+    const [stats, setStats] = useState({ sales: 0, transactions: 0, cogs: 0, expenses: 0, profit: 0 });
     const [dailyData, setDailyData] = useState([]);
     const [topProducts, setTopProducts] = useState([]);
     const [reportData, setReportData] = useState({}); // Stores raw filtered data (expenses etc)
@@ -104,11 +104,10 @@ export default function ReportsView() {
                 const items = (typeof trx.items === 'string' ? JSON.parse(trx.items) : trx.items) || [];
 
                 items.forEach(cartItem => {
-                    if (!cartItem?.product) return;
+                    if (!cartItem?.product?.id) return; // Added product.id check
                     // Top Products Stats
-                    // cartItem.product.id
                     if (!productMap[cartItem.product.id]) {
-                        productMap[cartItem.product.id] = { name: cartItem.product.name, qty: 0, sales: 0 };
+                        productMap[cartItem.product.id] = { name: cartItem.product.name || 'Unknown', qty: 0, sales: 0 };
                     }
                     productMap[cartItem.product.id].qty += (cartItem.qty || 0);
                     productMap[cartItem.product.id].sales += ((cartItem.product.price || 0) * (cartItem.qty || 0));
@@ -164,20 +163,20 @@ export default function ReportsView() {
         doc.setFontSize(11);
         doc.text(`Period: ${dateRange.start} to ${dateRange.end}`, 14, 30);
 
-        doc.text(`Total Sales: Rp ${stats.sales.toLocaleString()}`, 14, 40);
-        doc.text(`Total Profit: Rp ${stats.profit.toLocaleString()}`, 14, 46);
-        doc.text(`Transactions: ${stats.transactions}`, 14, 52);
+        doc.text(`Total Sales: Rp ${(stats.sales || 0).toLocaleString()}`, 14, 40);
+        doc.text(`Total Profit: Rp ${(stats.profit || 0).toLocaleString()}`, 14, 46);
+        doc.text(`Transactions: ${stats.transactions || 0}`, 14, 52);
 
         // Daily Table
         doc.text("Daily Breakdown", 14, 65);
         autoTable(doc, {
             startY: 70,
             head: [['Date', 'Sales', 'COGS', 'Profit']],
-            body: dailyData.map(d => [
-                d.date,
-                `Rp ${d.sales.toLocaleString()}`,
-                `Rp ${d.cogs.toLocaleString()}`,
-                `Rp ${d.profit.toLocaleString()}`
+            body: (dailyData || []).map(d => [
+                d.date || '-',
+                `Rp ${(d.sales || 0).toLocaleString()}`,
+                `Rp ${(d.cogs || 0).toLocaleString()}`,
+                `Rp ${(d.profit || 0).toLocaleString()}`
             ]),
         });
 
@@ -187,10 +186,10 @@ export default function ReportsView() {
         autoTable(doc, {
             startY: finalY + 5,
             head: [['Product', 'Qty Sold', 'Revenue']],
-            body: topProducts.map(p => [
-                p.name,
-                p.qty,
-                `Rp ${p.sales.toLocaleString()}`
+            body: (topProducts || []).map(p => [
+                p.name || '-',
+                p.qty || 0,
+                `Rp ${(p.sales || 0).toLocaleString()}`
             ]),
         });
 
@@ -266,19 +265,19 @@ export default function ReportsView() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '3rem' }}>
                 <div style={{ background: '#2c2c2e', padding: '1.5rem', borderRadius: '12px', border: '1px solid #333' }}>
                     <p style={{ color: '#888', fontSize: '0.9rem' }}>Gross Sales</p>
-                    <h3 style={{ fontSize: '1.8rem', color: 'white' }}>Rp {stats.sales.toLocaleString()}</h3>
+                    <h3 style={{ fontSize: '1.8rem', color: 'white' }}>Rp {(stats.sales || 0).toLocaleString()}</h3>
                 </div>
                 <div style={{ background: '#2c2c2e', padding: '1.5rem', borderRadius: '12px', border: '1px solid #333' }}>
                     <p style={{ color: '#888', fontSize: '0.9rem' }}>COGS (HPP)</p>
-                    <h3 style={{ fontSize: '1.8rem', color: '#ff4d4f' }}>Rp {stats.cogs.toLocaleString()}</h3>
+                    <h3 style={{ fontSize: '1.8rem', color: '#ff4d4f' }}>Rp {(stats.cogs || 0).toLocaleString()}</h3>
                 </div>
                 <div style={{ background: '#2c2c2e', padding: '1.5rem', borderRadius: '12px', border: '1px solid #333' }}>
                     <p style={{ color: '#888', fontSize: '0.9rem' }}>Operational Expenses</p>
-                    <h3 style={{ fontSize: '1.8rem', color: '#ff4d4f' }}>Rp {stats.expenses.toLocaleString()}</h3>
+                    <h3 style={{ fontSize: '1.8rem', color: '#ff4d4f' }}>Rp {(stats.expenses || 0).toLocaleString()}</h3>
                 </div>
                 <div style={{ background: '#2c2c2e', padding: '1.5rem', borderRadius: '12px', border: '1px solid #333' }}>
                     <p style={{ color: '#888', fontSize: '0.9rem' }}>Net Profit</p>
-                    <h3 style={{ fontSize: '1.8rem', color: '#00e0b8' }}>Rp {stats.profit.toLocaleString()}</h3>
+                    <h3 style={{ fontSize: '1.8rem', color: '#00e0b8' }}>Rp {(stats.profit || 0).toLocaleString()}</h3>
                 </div>
             </div>
 
@@ -298,9 +297,9 @@ export default function ReportsView() {
                             <tbody>
                                 {dailyData.map(d => (
                                     <tr key={d.date} style={{ borderBottom: '1px solid #222' }}>
-                                        <td style={{ padding: '0.5rem' }}>{d.date}</td>
-                                        <td style={{ padding: '0.5rem' }}>Rp {d.sales.toLocaleString()}</td>
-                                        <td style={{ padding: '0.5rem', color: '#00e0b8' }}>Rp {d.profit.toLocaleString()}</td>
+                                        <td style={{ padding: '0.5rem' }}>{d.date || '-'}</td>
+                                        <td style={{ padding: '0.5rem' }}>Rp {(d.sales || 0).toLocaleString()}</td>
+                                        <td style={{ padding: '0.5rem', color: '#00e0b8' }}>Rp {(d.profit || 0).toLocaleString()}</td>
                                     </tr>
                                 ))}
                                 {dailyData.length === 0 && <tr><td colSpan="3" style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>No Data</td></tr>}
@@ -315,8 +314,8 @@ export default function ReportsView() {
                     <ul style={{ listStyle: 'none', padding: 0 }}>
                         {topProducts.map((p, i) => (
                             <li key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.8rem', borderBottom: '1px solid #333', paddingBottom: '0.4rem' }}>
-                                <span>{i + 1}. {p.name} <span style={{ color: '#888', fontSize: '0.8rem' }}>({p.qty}x)</span></span>
-                                <span>Rp {p.sales.toLocaleString()}</span>
+                                <span>{i + 1}. {p.name || 'Unknown'} <span style={{ color: '#888', fontSize: '0.8rem' }}>({p.qty || 0}x)</span></span>
+                                <span>Rp {(p.sales || 0).toLocaleString()}</span>
                             </li>
                         ))}
                         {topProducts.length === 0 && <p style={{ color: '#666' }}>No Sales</p>}
