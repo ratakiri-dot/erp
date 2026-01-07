@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import styles from "@/components/Dashboard.module.css";
 import { db } from "@/lib/db";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function ProductsView() {
     const [products, setProducts] = useState([]);
@@ -107,16 +109,63 @@ export default function ProductsView() {
         setNewCategory("");
     };
 
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text("Products List", 14, 22);
+        doc.setFontSize(11);
+        doc.text(`Generated: ${new Date().toLocaleString('id-ID')}`, 14, 30);
+
+        // Group by category
+        const grouped = {};
+        (products || []).forEach(p => {
+            if (!grouped[p.category]) grouped[p.category] = [];
+            grouped[p.category].push(p);
+        });
+
+        let startY = 40;
+        Object.keys(grouped).sort().forEach(category => {
+            doc.setFontSize(12);
+            doc.setTextColor(0, 224, 184);
+            doc.text(category, 14, startY);
+            doc.setTextColor(0, 0, 0);
+
+            autoTable(doc, {
+                startY: startY + 5,
+                head: [['Product Name', 'Price']],
+                body: grouped[category].map(p => [
+                    p.name || '-',
+                    `Rp ${(p.price || 0).toLocaleString()}`
+                ]),
+                styles: { fontSize: 9 },
+                headStyles: { fillColor: [0, 224, 184] },
+                margin: { left: 14 }
+            });
+
+            startY = doc.lastAutoTable.finalY + 10;
+        });
+
+        doc.save(`products_${new Date().toISOString().split('T')[0]}.pdf`);
+    };
+
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: "1.5rem" }}>
                 <h2>Kelola Produk</h2>
-                <button
-                    onClick={() => setShowForm(true)}
-                    style={{ padding: '0.5rem 1rem', background: '#00e0b8', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#000' }}
-                >
-                    + Tambah Produk
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                        onClick={handleExportPDF}
+                        style={{ padding: '0.5rem 1rem', background: '#1890ff', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                    >
+                        📄 Export PDF
+                    </button>
+                    <button
+                        onClick={() => setShowForm(true)}
+                        style={{ padding: '0.5rem 1rem', background: '#00e0b8', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#000' }}
+                    >
+                        + Tambah Produk
+                    </button>
+                </div>
             </div>
 
             {showForm && (

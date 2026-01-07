@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import styles from "@/components/Dashboard.module.css";
 import { db } from "@/lib/db";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function InventoryView() {
     const [inventory, setInventory] = useState([]);
@@ -133,16 +135,61 @@ export default function InventoryView() {
         setMinStock(0);
     };
 
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text("Inventory Report", 14, 22);
+        doc.setFontSize(11);
+        doc.text(`Generated: ${new Date().toLocaleString('id-ID')}`, 14, 30);
+
+        autoTable(doc, {
+            startY: 40,
+            head: [['Name', 'Stock', 'Unit', 'Cost/Unit', 'Min Stock', 'Status']],
+            body: (inventory || []).map(item => [
+                item.name || '-',
+                item.stock || 0,
+                item.unit || '-',
+                `Rp ${(item.cost || 0).toLocaleString()}`,
+                item.min_stock || 0,
+                item.stock < item.min_stock ? 'LOW STOCK' : 'OK'
+            ]),
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [0, 224, 184] },
+            didParseCell: function (data) {
+                // Color code status column
+                if (data.column.index === 5 && data.section === 'body') {
+                    const status = data.cell.raw;
+                    if (status === 'LOW STOCK') {
+                        data.cell.styles.textColor = [255, 77, 79];
+                        data.cell.styles.fontStyle = 'bold';
+                    } else {
+                        data.cell.styles.textColor = [82, 196, 26];
+                    }
+                }
+            }
+        });
+
+        doc.save(`inventory_${new Date().toISOString().split('T')[0]}.pdf`);
+    };
+
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: "1.5rem" }}>
                 <h2>Kelola Bahan Baku</h2>
-                <button
-                    onClick={() => setShowForm(true)}
-                    style={{ padding: '0.5rem 1rem', background: '#00e0b8', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#000' }}
-                >
-                    + Tambah Bahan
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                        onClick={handleExportPDF}
+                        style={{ padding: '0.5rem 1rem', background: '#1890ff', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                    >
+                        📄 Export PDF
+                    </button>
+                    <button
+                        onClick={() => setShowForm(true)}
+                        style={{ padding: '0.5rem 1rem', background: '#00e0b8', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#000' }}
+                    >
+                        + Tambah Bahan
+                    </button>
+                </div>
             </div>
 
             {/* RESTOCK MODAL */}

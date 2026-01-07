@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import styles from "@/components/Dashboard.module.css";
 import { db } from "@/lib/db";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function TransactionsView() {
     const [trxs, setTrxs] = useState([]);
@@ -50,9 +52,52 @@ export default function TransactionsView() {
         setFilteredTrxs(result);
     }, [searchId, dateStart, dateEnd, paymentMethod, trxs]);
 
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text("Transaction History", 14, 22);
+        doc.setFontSize(11);
+        doc.text(`Generated: ${new Date().toLocaleString('id-ID')}`, 14, 30);
+
+        if (dateStart || dateEnd) {
+            doc.text(`Period: ${dateStart || 'All'} to ${dateEnd || 'Now'}`, 14, 36);
+        }
+
+        const totalAmount = filteredTrxs.reduce((sum, t) => sum + (t.grand_total || 0), 0);
+        doc.text(`Total Transactions: ${filteredTrxs.length}`, 14, 42);
+        doc.text(`Total Amount: Rp ${totalAmount.toLocaleString()}`, 14, 48);
+
+        autoTable(doc, {
+            startY: 55,
+            head: [['ID', 'Date/Time', 'Items', 'Total', 'Payment']],
+            body: filteredTrxs.map(t => [
+                t.id?.includes('_') ? (t.id.split('_')[1] || t.id) : (t.id || 'N/A'),
+                t.created_at ? new Date(t.created_at).toLocaleString('id-ID') : '-',
+                (t.items || []).map(i => `${i?.qty}x ${i?.product?.name || 'Unknown'}`).join(', '),
+                `Rp ${(t.grand_total || 0).toLocaleString()}`,
+                t.payment_method || '-'
+            ]),
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [0, 224, 184] },
+            columnStyles: {
+                2: { cellWidth: 60 } // Items column wider
+            }
+        });
+
+        doc.save(`transactions_${new Date().toISOString().split('T')[0]}.pdf`);
+    };
+
     return (
         <div>
-            <h2 style={{ marginBottom: "1.5rem" }}>Transaction History</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: "1.5rem" }}>
+                <h2>Transaction History</h2>
+                <button
+                    onClick={handleExportPDF}
+                    style={{ padding: '0.5rem 1rem', background: '#1890ff', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                    📄 Export PDF
+                </button>
+            </div>
 
             {/* FILTERS UI */}
             <div style={{ background: '#1f1f22', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
