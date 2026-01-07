@@ -67,7 +67,7 @@ export default function RecipesView() {
 
     const handleDelete = async (recipe) => {
         if (confirm("Hapus resep ini?")) {
-            await db.delete('recipes', recipe.product_id);
+            await db.delete('recipes', recipe.product_id, 'product_id');
             loadData();
         }
     };
