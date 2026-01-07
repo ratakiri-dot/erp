@@ -208,13 +208,13 @@ export default function ProductsView() {
                     </tr>
                 </thead>
                 <tbody>
-                    {products.map(item => (
+                    {(products || []).map(item => (
                         <tr key={item.id}>
                             <td>
-                                {item.image.startsWith('data:') ? (
+                                {item.image?.startsWith('data:') ? (
                                     <img src={item.image} alt={item.name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
                                 ) : (
-                                    <span style={{ fontSize: '2rem' }}>{item.image}</span>
+                                    <span style={{ fontSize: '2rem' }}>{item.image || '📦'}</span>
                                 )}
                             </td>
                             <td>{item.name}</td>

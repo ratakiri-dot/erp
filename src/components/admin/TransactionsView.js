@@ -107,14 +107,14 @@ export default function TransactionsView() {
                     <tbody>
                         {filteredTrxs.map(t => (
                             <tr key={t.id}>
-                                <td style={{ fontFamily: 'monospace', color: '#888' }}>{t.id.split('_')[1] || t.id}</td>
+                                <td style={{ fontFamily: 'monospace', color: '#888' }}>{t.id?.includes('_') ? (t.id.split('_')[1] || t.id) : (t.id || 'N/A')}</td>
                                 <td style={{ fontSize: '0.9rem' }}>
-                                    {new Date(t.created_at).toLocaleDateString()} <br />
-                                    <span style={{ color: '#666' }}>{new Date(t.created_at).toLocaleTimeString()}</span>
+                                    {t.created_at ? new Date(t.created_at).toLocaleDateString() : '-'} <br />
+                                    <span style={{ color: '#666' }}>{t.created_at ? new Date(t.created_at).toLocaleTimeString() : '-'}</span>
                                 </td>
                                 <td>
-                                    {t.items.map((i, idx) => (
-                                        <div key={idx}>{i.qty}x {i.product.name}</div>
+                                    {(t.items || []).map((i, idx) => (
+                                        <div key={idx}>{i?.qty}x {i?.product?.name || 'Unknown'}</div>
                                     ))}
                                 </td>
                                 <td style={{ fontWeight: "bold" }}>Rp {(t.grand_total || 0).toLocaleString()}</td>

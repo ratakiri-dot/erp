@@ -104,7 +104,7 @@ export default function UsersView() {
                     </tr>
                 </thead>
                 <tbody>
-                    {users.map(u => (
+                    {(users || []).map(u => (
                         <tr key={u.id}>
                             <td>{u.name}</td>
                             <td>
@@ -113,7 +113,7 @@ export default function UsersView() {
                                     background: u.role === 'ADMIN' ? '#ff4d4f' : u.role === 'INVENTORY' ? '#1890ff' : u.role === 'FINANCE' ? '#722ed1' : '#52c41a',
                                     color: 'white'
                                 }}>
-                                    {u.role}
+                                    {u.role || 'CASHIER'}
                                 </span>
                             </td>
                             <td style={{ fontFamily: 'monospace' }}>****</td>
