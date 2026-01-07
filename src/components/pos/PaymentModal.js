@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./PaymentModal.module.css";
 import { usePOS } from "@/context/POSContext";
 import { db } from "@/lib/db";
