@@ -34,7 +34,6 @@ const SEED_DATA = {
     recipes: [
         // Kopi Susu: 15gr Kopi + 100ml Susu + 20ml Gula + 1 Cup
         {
-            id: 'r1',
             product_id: 'p1',
             ingredients: JSON.stringify([ // Schema stores JSONB
                 { inventoryId: 'i1', qty: 15 },
@@ -45,7 +44,6 @@ const SEED_DATA = {
         },
         // Americano: 18gr Kopi + 1 Cup
         {
-            id: 'r2',
             product_id: 'p2',
             ingredients: JSON.stringify([
                 { inventoryId: 'i1', qty: 18 },
@@ -83,7 +81,7 @@ export const db = {
             }
 
             // 4. Check Recipes
-            const { data: recipes, error: rcpErr } = await supabase.from('recipes').select('id').limit(1);
+            const { data: recipes, error: rcpErr } = await supabase.from('recipes').select('product_id').limit(1);
             if (!rcpErr && (!recipes || recipes.length === 0)) {
                 console.log('Seeding Recipes...');
                 await supabase.from('recipes').insert(SEED_DATA.recipes);
@@ -127,8 +125,8 @@ export const db = {
         return data?.[0]; // Supabase returns array
     },
 
-    update: async (collection, id, updates) => {
-        const { data, error } = await supabase.from(collection).update(updates).eq('id', id).select();
+    update: async (collection, id, updates, idCol = 'id') => {
+        const { data, error } = await supabase.from(collection).update(updates).eq(idCol, id).select();
         if (error) {
             console.error(`Error updating ${collection}:`, error);
             throw error;
@@ -136,8 +134,8 @@ export const db = {
         return data?.[0];
     },
 
-    delete: async (collection, id) => {
-        const { error } = await supabase.from(collection).delete().eq('id', id);
+    delete: async (collection, id, idCol = 'id') => {
+        const { error } = await supabase.from(collection).delete().eq(idCol, id);
         if (error) {
             console.error(`Error deleting from ${collection}:`, error);
             return false;
