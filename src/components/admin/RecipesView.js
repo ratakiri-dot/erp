@@ -16,7 +16,9 @@ export default function RecipesView() {
     const [ingredients, setIngredients] = useState([{ inventoryId: "", qty: 0 }]);
 
     const loadData = async () => {
-        setRecipes(await db.get('recipes'));
+        const recipesData = await db.get('recipes');
+        console.log('📋 Loaded Recipes:', recipesData);
+        setRecipes(recipesData);
         setProducts(await db.get('products'));
         setInventory(await db.get('inventory'));
     };
@@ -196,15 +198,20 @@ export default function RecipesView() {
                 <tbody>
                     {(recipes || []).map((recipe, idx) => {
                         const ings = (typeof recipe.ingredients === 'string' ? JSON.parse(recipe.ingredients) : recipe.ingredients) || [];
+                        console.log(`Recipe ${recipe.product_id}:`, { raw: recipe.ingredients, parsed: ings });
                         return (
                             <tr key={recipe.product_id || idx}>
                                 <td style={{ fontWeight: 'bold' }}>{getProductName(recipe.product_id)}</td>
                                 <td>
-                                    {ings.map((ing, i) => (
-                                        <div key={i} style={{ fontSize: '0.9rem', color: '#ccc' }}>
-                                            • {ing?.qty || 0} × {getInventoryName(ing?.inventoryId)}
-                                        </div>
-                                    ))}
+                                    {ings.length > 0 ? (
+                                        ings.map((ing, i) => (
+                                            <div key={i} style={{ fontSize: '0.9rem', color: '#ccc' }}>
+                                                • {ing?.qty || 0} × {getInventoryName(ing?.inventoryId)}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <span style={{ color: '#666', fontSize: '0.85rem' }}>Belum ada komposisi</span>
+                                    )}
                                 </td>
                                 <td>
                                     <button onClick={() => handleEdit(recipe)} style={{ marginRight: '0.5rem', color: '#1890ff', background: 'none', border: 'none', cursor: 'pointer' }}>
