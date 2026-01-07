@@ -101,29 +101,30 @@ export default function ReportsView() {
                 dailyMap[dateKey].sales += saleAmount;
 
                 // trx.items is JSONB, might need parsing if string, but Supabase client usually auto-parses JSON columns
-                const items = typeof trx.items === 'string' ? JSON.parse(trx.items) : trx.items;
+                const items = (typeof trx.items === 'string' ? JSON.parse(trx.items) : trx.items) || [];
 
                 items.forEach(cartItem => {
+                    if (!cartItem?.product) return;
                     // Top Products Stats
                     // cartItem.product.id
                     if (!productMap[cartItem.product.id]) {
                         productMap[cartItem.product.id] = { name: cartItem.product.name, qty: 0, sales: 0 };
                     }
-                    productMap[cartItem.product.id].qty += cartItem.qty;
-                    productMap[cartItem.product.id].sales += (cartItem.product.price * cartItem.qty);
+                    productMap[cartItem.product.id].qty += (cartItem.qty || 0);
+                    productMap[cartItem.product.id].sales += ((cartItem.product.price || 0) * (cartItem.qty || 0));
 
                     // COGS Calc
                     // Find recipe by product_id
                     const recipe = recipes.find(r => r.product_id === cartItem.product.id);
                     let itemCost = 0;
                     if (recipe) {
-                        const ingredients = typeof recipe.ingredients === 'string' ? JSON.parse(recipe.ingredients) : recipe.ingredients;
+                        const ingredients = (typeof recipe.ingredients === 'string' ? JSON.parse(recipe.ingredients) : recipe.ingredients) || [];
                         ingredients.forEach(ing => {
                             const invItem = inventory.find(i => i.id === ing.inventoryId);
-                            if (invItem) itemCost += (Number(invItem.cost) * ing.qty);
+                            if (invItem) itemCost += (Number(invItem.cost || 0) * (ing.qty || 0));
                         });
                     }
-                    const totalItemCost = itemCost * cartItem.qty;
+                    const totalItemCost = itemCost * (cartItem.qty || 0);
                     totalCOGS += totalItemCost;
                     dailyMap[dateKey].cogs += totalItemCost;
                 });

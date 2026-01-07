@@ -18,8 +18,15 @@ export function POSProvider({ children }) {
             await db.init(); // Ensure DB is ready
 
             // Check session
-            const storedUser = sessionStorage.getItem('pos_current_user');
-            if (storedUser) setUser(JSON.parse(storedUser));
+            try {
+                const storedUser = sessionStorage.getItem('pos_current_user');
+                if (storedUser && storedUser !== 'undefined') {
+                    setUser(JSON.parse(storedUser));
+                }
+            } catch (e) {
+                console.error("Session parse error", e);
+                sessionStorage.removeItem('pos_current_user');
+            }
 
             // Check shift
             const activeShift = await db.getOpenShift();

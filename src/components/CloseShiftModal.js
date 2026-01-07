@@ -30,11 +30,11 @@ export default function CloseShiftModal({ onClose }) {
                 <div className={styles.stats}>
                     <div className={styles.statItem}>
                         <p>Started At</p>
-                        <p>{new Date(shift.startTime).toLocaleTimeString()}</p>
+                        <p>{shift?.start_time ? new Date(shift.start_time).toLocaleTimeString() : '-'}</p>
                     </div>
                     <div className={styles.statItem}>
                         <p>Start Cash</p>
-                        <p>Rp {shift.startCash.toLocaleString()}</p>
+                        <p>Rp {(shift?.start_cash || 0).toLocaleString()}</p>
                     </div>
                 </div>
 
