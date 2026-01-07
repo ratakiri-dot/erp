@@ -94,15 +94,23 @@ export default function PaymentModal({ total, onClose }) {
         // window.location.reload(); // Not needed if we cleared cart via state
     };
 
-    // Get Settings for Preview
-    const rawSettings = db.get('settings');
-    const settings = rawSettings.storeName ? rawSettings : (rawSettings[0] || {
-        storeName: "POS SYSTEM DEMO",
-        storeAddress: "Jl. Teknologi No. 1",
-        footerMessage: "TERIMA KASIH",
-        showDashLines: true,
-        showFooter: true
+    const [settings, setSettings] = useState({
+        store_name: "RATAKIRI POS",
+        store_address: "Jl. Teknologi No. 1",
+        footer_message: "TERIMA KASIH",
+        show_dash_lines: true,
+        show_footer: true
     });
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            const res = await db.get('settings');
+            if (res && res.length > 0) {
+                setSettings(res[0]);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     return (
         <div className={styles.overlay}>

@@ -26,7 +26,7 @@ export default function ReceiptPreview({ data, settings }) {
         line: {
             borderBottom: '1px dashed #000',
             margin: '8px 0',
-            display: settings.showDashLines ? 'block' : 'none'
+            display: settings.show_dash_lines ? 'block' : 'none'
         },
         itemRow: { display: 'flex', justifyContent: 'space-between' },
         bold: { fontWeight: 'bold' }
@@ -36,8 +36,8 @@ export default function ReceiptPreview({ data, settings }) {
         <div style={styles.container}>
             {/* Header */}
             <div style={styles.center}>
-                <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{settings.storeName}</div>
-                <div>{settings.storeAddress}</div>
+                <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{settings.store_name}</div>
+                <div>{settings.store_address}</div>
             </div>
 
             <div style={styles.line}></div>
@@ -45,7 +45,7 @@ export default function ReceiptPreview({ data, settings }) {
             {/* Meta */}
             <div>
                 <div>No: {data.id ? data.id.split('_')[1] : '0000'}</div>
-                <div>Tgl: {data.createdAt ? new Date(data.createdAt).toLocaleString() : new Date().toLocaleString()}</div>
+                <div>Tgl: {data.created_at ? new Date(data.created_at).toLocaleString() : new Date().toLocaleString()}</div>
             </div>
 
             <div style={styles.line}></div>
@@ -64,29 +64,29 @@ export default function ReceiptPreview({ data, settings }) {
 
             {/* Total */}
             <div style={{ ...styles.right, ...styles.bold }}>
-                TOTAL: Rp {data.grandTotal ? data.grandTotal.toLocaleString() : '0'}
+                TOTAL: Rp {data.grand_total ? data.grand_total.toLocaleString() : '0'}
             </div>
 
             {/* Change Info */}
-            {data.cashPaid !== undefined && (
+            {data.pay_amount !== undefined && (
                 <div style={{ marginTop: '4px' }}>
                     <div style={styles.itemRow}>
                         <span>Bayar</span>
-                        <span>Rp {data.cashPaid.toLocaleString()}</span>
+                        <span>Rp {data.pay_amount.toLocaleString()}</span>
                     </div>
                     <div style={styles.itemRow}>
                         <span>Kembali</span>
-                        <span>Rp {data.change ? data.change.toLocaleString() : '0'}</span>
+                        <span>Rp {data.change !== undefined ? data.change.toLocaleString() : '0'}</span>
                     </div>
                 </div>
             )}
 
             {/* Footer */}
-            {settings.showFooter && (
+            {settings.show_footer && (
                 <>
                     <br />
                     <div style={styles.center}>
-                        {settings.footerMessage}
+                        {settings.footer_message}
                     </div>
                 </>
             )}
