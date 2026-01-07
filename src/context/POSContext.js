@@ -28,9 +28,20 @@ export function POSProvider({ children }) {
                 sessionStorage.removeItem('pos_current_user');
             }
 
-            // Check shift
-            const activeShift = await db.getOpenShift();
-            if (activeShift) setShift(activeShift);
+            // Check shift - only load if it belongs to current user
+            const storedUser = sessionStorage.getItem('pos_current_user');
+            if (storedUser && storedUser !== 'undefined') {
+                try {
+                    const currentUser = JSON.parse(storedUser);
+                    const activeShift = await db.getOpenShift();
+                    // Only set shift if it belongs to the current user
+                    if (activeShift && activeShift.user_id === currentUser.id) {
+                        setShift(activeShift);
+                    }
+                } catch (e) {
+                    console.error("Shift load error", e);
+                }
+            }
 
             // Load Products
             const prods = await db.get('products');
@@ -53,7 +64,9 @@ export function POSProvider({ children }) {
 
     const logout = () => {
         setUser(null);
+        setShift(null); // Clear shift on logout
         sessionStorage.removeItem('pos_current_user');
+        sessionStorage.removeItem('pos_current_shift');
     };
 
     const openShift = async (amount) => {
