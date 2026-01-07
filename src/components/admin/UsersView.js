@@ -77,6 +77,7 @@ export default function UsersView() {
                                 <option value="ADMIN">Admin / Owner</option>
                                 <option value="CASHIER">Cashier</option>
                                 <option value="INVENTORY">Inventory Staff</option>
+                                <option value="FINANCE">Finance / Accountant</option>
                             </select>
                         </div>
                         <div>
@@ -109,7 +110,7 @@ export default function UsersView() {
                             <td>
                                 <span style={{
                                     padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold',
-                                    background: u.role === 'ADMIN' ? '#ff4d4f' : u.role === 'INVENTORY' ? '#1890ff' : '#52c41a',
+                                    background: u.role === 'ADMIN' ? '#ff4d4f' : u.role === 'INVENTORY' ? '#1890ff' : u.role === 'FINANCE' ? '#722ed1' : '#52c41a',
                                     color: 'white'
                                 }}>
                                     {u.role}
