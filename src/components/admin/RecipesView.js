@@ -197,26 +197,29 @@ export default function RecipesView() {
                     </tr>
                 </thead>
                 <tbody>
-                    {recipes.map((recipe, idx) => (
-                        <tr key={idx}>
-                            <td style={{ fontWeight: 'bold' }}>{getProductName(recipe.productId)}</td>
-                            <td>
-                                {recipe.ingredients.map((ing, i) => (
-                                    <div key={i} style={{ fontSize: '0.9rem', color: '#ccc' }}>
-                                        • {ing.qty} × {getInventoryName(ing.inventoryId)}
-                                    </div>
-                                ))}
-                            </td>
-                            <td>
-                                <button onClick={() => handleEdit(recipe)} style={{ marginRight: '0.5rem', color: '#1890ff', background: 'none', border: 'none', cursor: 'pointer' }}>
-                                    Edit
-                                </button>
-                                <button onClick={() => handleDelete(recipe.productId)} style={{ color: '#ff4d4f', background: 'none', border: 'none', cursor: 'pointer' }}>
-                                    Hapus
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
+                    {recipes.map((recipe, idx) => {
+                        const ings = typeof recipe.ingredients === 'string' ? JSON.parse(recipe.ingredients) : (recipe.ingredients || []);
+                        return (
+                            <tr key={idx}>
+                                <td style={{ fontWeight: 'bold' }}>{getProductName(recipe.product_id)}</td>
+                                <td>
+                                    {ings.map((ing, i) => (
+                                        <div key={i} style={{ fontSize: '0.9rem', color: '#ccc' }}>
+                                            • {ing.qty} × {getInventoryName(ing.inventoryId)}
+                                        </div>
+                                    ))}
+                                </td>
+                                <td>
+                                    <button onClick={() => handleEdit(recipe)} style={{ marginRight: '0.5rem', color: '#1890ff', background: 'none', border: 'none', cursor: 'pointer' }}>
+                                        Edit
+                                    </button>
+                                    <button onClick={() => handleDelete(recipe.id)} style={{ color: '#ff4d4f', background: 'none', border: 'none', cursor: 'pointer' }}>
+                                        Hapus
+                                    </button>
+                                </td>
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </table>
         </div>

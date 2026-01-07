@@ -254,18 +254,18 @@ export default function InventoryView() {
                                 <td style={{ fontWeight: 'bold' }}>{item.stock}</td>
                                 <td>{item.unit}</td>
                                 <td>Rp {item.cost.toLocaleString()}</td>
-                                <td>{item.minStock}</td>
+                                <td>{item.min_stock}</td>
                                 <td>
                                     <span style={{
                                         padding: '4px 8px',
                                         borderRadius: '4px',
                                         fontSize: '0.8rem',
-                                        background: item.stock < item.minStock ? '#ff4d4f' : '#52c41a',
+                                        background: item.stock < item.min_stock ? '#ff4d4f' : '#52c41a',
                                         color: 'white',
                                         display: 'inline-block', // Prevent break
                                         whiteSpace: 'nowrap'
                                     }}>
-                                        {item.stock < item.minStock ? 'Low Stock' : 'OK'}
+                                        {item.stock < item.min_stock ? 'Low Stock' : 'OK'}
                                     </span>
                                 </td>
                                 <td style={{ whiteSpace: 'nowrap' }}>

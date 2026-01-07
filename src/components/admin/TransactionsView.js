@@ -109,20 +109,20 @@ export default function TransactionsView() {
                             <tr key={t.id}>
                                 <td style={{ fontFamily: 'monospace', color: '#888' }}>{t.id.split('_')[1] || t.id}</td>
                                 <td style={{ fontSize: '0.9rem' }}>
-                                    {new Date(t.createdAt).toLocaleDateString()} <br />
-                                    <span style={{ color: '#666' }}>{new Date(t.createdAt).toLocaleTimeString()}</span>
+                                    {new Date(t.created_at).toLocaleDateString()} <br />
+                                    <span style={{ color: '#666' }}>{new Date(t.created_at).toLocaleTimeString()}</span>
                                 </td>
                                 <td>
                                     {t.items.map((i, idx) => (
                                         <div key={idx}>{i.qty}x {i.product.name}</div>
                                     ))}
                                 </td>
-                                <td style={{ fontWeight: "bold" }}>Rp {t.grandTotal.toLocaleString()}</td>
+                                <td style={{ fontWeight: "bold" }}>Rp {(t.grand_total || 0).toLocaleString()}</td>
                                 <td>
                                     <span style={{
                                         padding: '4px 8px', borderRadius: '4px', background: '#333', fontSize: '0.8rem'
                                     }}>
-                                        {t.paymentMethod}
+                                        {t.payment_method}
                                     </span>
                                 </td>
                             </tr>
