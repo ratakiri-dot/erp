@@ -20,14 +20,46 @@ const SEED_DATA = {
         { id: 'u3', name: 'Siti (Gudang)', role: 'INVENTORY', pin: '5678' },
         { id: 'u4', name: 'Finance Staff', role: 'FINANCE', pin: '9999' },
     ],
-    // ... products/inventory reused from existing if needed, but better to fetch from DB
+    inventory: [
+        { id: 'i1', name: 'Kopi Arabica (Gram)', unit: 'gr', stock: 1000, cost: 300, min_stock: 200 }, // Schema snake_case for min_stock
+        { id: 'i2', name: 'Susu UHT (ML)', unit: 'ml', stock: 5000, cost: 20, min_stock: 1000 },
+        { id: 'i3', name: 'Gula Aren (ML)', unit: 'ml', stock: 2000, cost: 50, min_stock: 500 },
+        { id: 'i4', name: 'Cup 12oz', unit: 'pcs', stock: 500, cost: 800, min_stock: 50 },
+    ],
+    products: [
+        { id: 'p1', name: 'Kopi Susu Gula Aren', price: 18000, category: 'Coffee', image: '☕' },
+        { id: 'p2', name: 'Americano', price: 15000, category: 'Coffee', image: '🥃' },
+        { id: 'p3', name: 'Croissant', price: 25000, category: 'Food', image: '🥐' },
+    ],
+    recipes: [
+        // Kopi Susu: 15gr Kopi + 100ml Susu + 20ml Gula + 1 Cup
+        {
+            id: 'r1',
+            product_id: 'p1',
+            ingredients: JSON.stringify([ // Schema stores JSONB
+                { inventoryId: 'i1', qty: 15 },
+                { inventoryId: 'i2', qty: 100 },
+                { inventoryId: 'i3', qty: 20 },
+                { inventoryId: 'i4', qty: 1 },
+            ])
+        },
+        // Americano: 18gr Kopi + 1 Cup
+        {
+            id: 'r2',
+            product_id: 'p2',
+            ingredients: JSON.stringify([
+                { inventoryId: 'i1', qty: 18 },
+                { inventoryId: 'i4', qty: 1 },
+            ])
+        }
+    ]
 };
 
 export const db = {
     // Check connection & Seed if empty
     init: async () => {
         try {
-            // Check if users exist
+            // Check if users exist as a proxy for empty DB
             const { count, error } = await supabase.from('users').select('*', { count: 'exact', head: true });
             if (error) throw error;
 
@@ -35,6 +67,12 @@ export const db = {
                 console.log('Seeding Database to Supabase...');
                 // Seed Users
                 await supabase.from('users').insert(SEED_DATA.users);
+                // Seed Inventory
+                await supabase.from('inventory').insert(SEED_DATA.inventory);
+                // Seed Products
+                await supabase.from('products').insert(SEED_DATA.products);
+                // Seed Recipes
+                await supabase.from('recipes').insert(SEED_DATA.recipes);
 
                 // Seed Settings
                 await supabase.from('settings').insert({
@@ -46,7 +84,6 @@ export const db = {
                     printer_type: 'BLUETOOTH'
                 });
 
-                // Add more seeding if strictly required, but usually user inputs data
                 console.log('Seeding Complete.');
             }
         } catch (err) {
