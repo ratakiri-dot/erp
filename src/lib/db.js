@@ -59,22 +59,40 @@ export const db = {
     // Check connection & Seed if empty
     init: async () => {
         try {
-            // Check if users exist as a proxy for empty DB
-            const { count, error } = await supabase.from('users').select('*', { count: 'exact', head: true });
-            if (error) throw error;
+            console.log('Checking Database status...');
 
-            if (count === 0) {
-                console.log('Seeding Database to Supabase...');
-                // Seed Users
+            // 1. Check Users
+            const { count: userCount, error: userErr } = await supabase.from('users').select('*', { count: 'exact', head: true });
+            if (!userErr && userCount === 0) {
+                console.log('Seeding Users...');
                 await supabase.from('users').insert(SEED_DATA.users);
-                // Seed Inventory
-                await supabase.from('inventory').insert(SEED_DATA.inventory);
-                // Seed Products
-                await supabase.from('products').insert(SEED_DATA.products);
-                // Seed Recipes
-                await supabase.from('recipes').insert(SEED_DATA.recipes);
+            }
 
-                // Seed Settings
+            // 2. Check Inventory
+            const { count: invCount, error: invErr } = await supabase.from('inventory').select('*', { count: 'exact', head: true });
+            if (!invErr && invCount === 0) {
+                console.log('Seeding Inventory...');
+                await supabase.from('inventory').insert(SEED_DATA.inventory);
+            }
+
+            // 3. Check Products
+            const { count: prodCount, error: prodErr } = await supabase.from('products').select('*', { count: 'exact', head: true });
+            if (!prodErr && prodCount === 0) {
+                console.log('Seeding Products...');
+                await supabase.from('products').insert(SEED_DATA.products);
+            }
+
+            // 4. Check Recipes
+            const { count: rcpCount, error: rcpErr } = await supabase.from('recipes').select('*', { count: 'exact', head: true });
+            if (!rcpErr && rcpCount === 0) {
+                console.log('Seeding Recipes...');
+                await supabase.from('recipes').insert(SEED_DATA.recipes);
+            }
+
+            // 5. Check Settings
+            const { count: setCount, error: setErr } = await supabase.from('settings').select('*', { count: 'exact', head: true });
+            if (!setErr && setCount === 0) {
+                console.log('Seeding Settings...');
                 await supabase.from('settings').insert({
                     store_name: "RATAKIRI POS",
                     store_address: "Jl. Teknologi No. 1",
@@ -83,9 +101,9 @@ export const db = {
                     show_footer: true,
                     printer_type: 'BLUETOOTH'
                 });
-
-                console.log('Seeding Complete.');
             }
+
+            console.log('Database Check/Seeding Complete.');
         } catch (err) {
             console.error('DB Init Error:', err);
         }
